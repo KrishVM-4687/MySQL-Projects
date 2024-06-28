@@ -1,0 +1,34 @@
+USE test_database;
+
+-- QUERY 1 - Full year budget vs actual variance in GBP For Manpower Charges in all entities --
+SELECT 
+Report.company_code,
+Report.cost_centre,
+Report.ledger_code,
+Report.ledger_description,
+ROUND((Report.amount_in_local_currency * Conv.exch_rates),0) AS amount_in_GBP,
+ROUND(budget_plan.budget_in_GBP,0) AS budget,
+(ROUND((Report.amount_in_local_currency * Conv.exch_rates),0) - ROUND(budget_plan.budget_in_GBP,0)) AS variance
+FROM Transaction_Report AS Report
+JOIN exchange_rates AS Conv ON 
+	Report.local_currency = Conv.local_currency
+JOIN budget_plan
+	ON Report.cost_centre = budget_plan.cost_centre
+	AND Report.ledger_code = budget_plan.ledger_code
+WHERE Report.ledger_description = "Manpower Charges"
+GROUP BY Report.ledger_description, Report.company_code
+;
+
+-- QUERY 2 - summary of all costs by ledger description in GBP for the month of Jun
+SELECT
+	report.ledger_description,
+	ROUND((report.amount_in_local_currency * Conv.exch_rates),0) AS amount_in_GBP
+FROM transaction_report AS report
+JOIN exchange_rates AS Conv ON 
+	Report.local_currency = Conv.local_currency
+JOIN budget_plan
+	ON Report.cost_centre = budget_plan.cost_centre
+	AND Report.ledger_code = budget_plan.ledger_code
+WHERE report.month_name = "Jun"
+GROUP BY report.ledger_description
+;
